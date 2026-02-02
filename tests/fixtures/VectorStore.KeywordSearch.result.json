@@ -1,0 +1,79 @@
+[
+  {
+      "document": "class OllamaClient {\n  constructor() {}\n}",
+      "metadata": {
+          "language": "js",
+          "type": "class",
+          "model": "nomic-embed-text:latest",
+          "source_file": "lib/clients/ollama-client.js",
+          "textLength": 4008,
+          "text_length": 4008,
+          "className": "OllamaClient",
+          "astNodeType": "class_declaration",
+          "parser": "standard",
+          "chunk_type": "class",
+          "endRow": 135,
+          "filePath": "lib/clients/ollama-client.js",
+          "endColumn": 1,
+          "startColumn": 0,
+          "startRow": 5,
+          "lineStart": 6,
+          "lineEnd": 136
+      },
+      "distance": 0.4,
+      "score": 0.6,
+      "source": "keyword"
+  },
+  {
+      "document": "async indexCurrentProject(options = {}) {\n    const { force = false, embedProvider, embedModel } = options;\n\n    if (!this.currentProjectRoot) {\n      throw new Error('No project open to index');\n    }\n\n    if (!force && this.hasCachedEmbeddings()) {\n      console.log('Using cached embeddings for project');\n      this.isIndexed = true;\n      return this.lastIndexResult;\n    }\n\n    console.log(`Starting RAG indexing for: ${this.currentProjectRoot}`);\n\n    // Create indexer if not already created (callers may pre-create\n    // via createIndexer() to attach listeners first)\n    if (!this.indexer) {\n      await this.createIndexer(embedProvider, embedModel);\n    }\n\n    const indexingConfig = ConfigManager.getIndexingConfig();\n\n    try {\n      const indexResult = await this.indexer.index({\n        projectPath: this.currentProjectRoot,\n        cacheDir: this.cacheDir,\n        include: indexingConfig.include,\n        exclude: indexingConfig.exclude,\n        batchSize: indexingConfig.batchSize,\n        maxFileSize: 2 * 1024 * 1024,\n      });\n\n      this.lastIndexResult = indexResult;\n      this.isIndexed = true;\n      console.log('RAG indexing complete:', indexResult);\n      return indexResult;\n    } catch (error) {\n      console.error('RAG indexing failed:', error);\n      throw new Error(`Indexing failed: ${error.message}`);\n    }\n  }",
+      "metadata": {
+          "source_file": "lib/context-manager.js",
+          "filePath": "lib/context-manager.js",
+          "methodName": "options",
+          "text_length": 1348,
+          "language": "js",
+          "chunk_type": "method",
+          "isAsync": true,
+          "model": "nomic-embed-text:latest",
+          "startColumn": 2,
+          "endRow": 220,
+          "startRow": 179,
+          "astNodeType": "method_definition",
+          "textLength": 1348,
+          "parser": "standard",
+          "endColumn": 3,
+          "type": "method",
+          "lineStart": 180,
+          "lineEnd": 221
+      },
+      "distance": 0.6,
+      "score": 0.4,
+      "source": "keyword"
+  },
+  {
+      "document": "async sendPrompt(fullPrompt, systemPrompt = null) {\n    await this.ensureOllamaReady();\n\n    const model  = this.configuredModel || this.defaultModel;\n    const opts   = this._getLLMOptions();\n\n    const system = systemPrompt ||\n      `You are an expert software developer. ` +\n      `Use the provided code context to give accurate, helpful responses. ` +\n      `If the context is not relevant to the question, ignore it.`;\n\n    try {\n      const response = await axios.post(`${this.baseURL}/api/generate`, {\n        model,\n        system,\n        prompt:     fullPrompt,\n        stream:     false,\n        keep_alive: '1h',\n        options:    opts\n      });\n      return response.data.response;\n    } catch (error) {\n      throw new Error(`Ollama request failed: ${error.message}`);\n    }\n  }",
+      "metadata": {
+          "source_file": "lib/clients/ollama-client.js",
+          "methodName": "fullPrompt",
+          "type": "method",
+          "startRow": 59,
+          "parser": "standard",
+          "startColumn": 2,
+          "textLength": 794,
+          "astNodeType": "method_definition",
+          "language": "js",
+          "chunk_type": "method",
+          "filePath": "lib/clients/ollama-client.js",
+          "isAsync": true,
+          "endRow": 83,
+          "endColumn": 3,
+          "model": "nomic-embed-text:latest",
+          "text_length": 794,
+          "lineStart": 60,
+          "lineEnd": 84
+      },
+      "distance": 0.6,
+      "score": 0.4,
+      "source": "keyword"
+  }
+]

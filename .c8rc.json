@@ -1,0 +1,14 @@
+{
+  "exclude": [
+    "tests/**",
+    "architecture/**",
+    "config/**",
+    "**/*.test.js",
+    "**/*.spec.js"
+  ],
+  "include": [
+    "lib/**"
+  ],
+  "reporter": ["text", "lcov"],
+  "all": true
+}

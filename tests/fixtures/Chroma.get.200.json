@@ -1,0 +1,74 @@
+{
+  "ids": [
+    "Y29uZmlnL2luZGV4Lmpz:2:1772450721530",
+    "Y29uZmlnL2luZGV4Lmpz:3:1772450721530",
+    "Y29uZmlnL2luZGV4Lmpz:4:1772450721530"
+  ],
+  "embeddings": null,
+  "documents": [
+    "static get(keyPath) {\n    return atom.config.get(`${this.NAMESPACE}.${keyPath}`);\n  }",
+    "static set(keyPath, value) {\n    return atom.config.set(`${this.NAMESPACE}.${keyPath}`, value);\n  }",
+    "static reset(keyPath) {\n    return atom.config.unset(`${this.NAMESPACE}.${keyPath}`);\n  }"
+  ],
+  "uris": null,
+  "metadatas": [
+    {
+      "type": "method",
+      "chunk_type": "method",
+      "methodName": "keyPath",
+      "text_length": 85,
+      "textLength": 85,
+      "astNodeType": "method_definition",
+      "parser": "standard",
+      "source_file": "config/index.js",
+      "isAsync": false,
+      "startColumn": 2,
+      "endColumn": 3,
+      "endRow": 27,
+      "language": "js",
+      "model": "nomic-embed-text:latest",
+      "filePath": "config/index.js",
+      "startRow": 25
+    },
+    {
+      "type": "method",
+      "filePath": "config/index.js",
+      "text_length": 99,
+      "source_file": "config/index.js",
+      "parser": "standard",
+      "startColumn": 2,
+      "chunk_type": "method",
+      "endRow": 31,
+      "model": "nomic-embed-text:latest",
+      "startRow": 29,
+      "methodName": "keyPath",
+      "language": "js",
+      "endColumn": 3,
+      "isAsync": false,
+      "astNodeType": "method_definition",
+      "textLength": 99
+    },
+    {
+      "model": "nomic-embed-text:latest",
+      "astNodeType": "method_definition",
+      "isAsync": false,
+      "text_length": 89,
+      "chunk_type": "method",
+      "textLength": 89,
+      "endRow": 35,
+      "type": "method",
+      "language": "js",
+      "endColumn": 3,
+      "startRow": 33,
+      "methodName": "keyPath",
+      "startColumn": 2,
+      "parser": "standard",
+      "filePath": "config/index.js",
+      "source_file": "config/index.js"
+    }
+  ],
+  "include": [
+    "documents",
+    "metadatas"
+  ]
+}

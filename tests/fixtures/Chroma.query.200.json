@@ -1,0 +1,88 @@
+{
+  "ids": [
+    [
+      "bGliL2NvbnRleHQtbWFuYWdlci5qcw==:20:1772450721663",
+      "bGliL2NvbnRleHQtbWFuYWdlci5qcw==:5:1772450721662",
+      "bGliL2NsaWVudHMvb2xsYW1hLWNsaWVudC5qcw==:3:1772450721862"
+    ]
+  ],
+  "embeddings": null,
+  "documents": [
+    [
+      "onProjectChange(projectRoot) {\n    if (this.currentProjectRoot === projectRoot && this.isIndexed) return;\n    this.currentProjectRoot = projectRoot;\n    this.lastIndexResult = null;\n    const hasCached = this.hasCachedEmbeddings();\n    this.isIndexed = hasCached;\n    console.log(hasCached\n      ? `Project has cached embeddings: ${projectRoot}`\n      : `Switched to project: ${projectRoot} (no cache)`);\n  }",
+      "constructor() {\n    /** @type {Indexer|null} */\n    this.indexer = null;\n    /** @type {VectorStore|null} */\n    this.store = null;\n    /** @type {Object|null} Last IndexResult from indexer.index() */\n    this.lastIndexResult = null;\n\n    this.currentProjectRoot = '';\n    this.isIndexed = false;\n    this.cacheDir = path.join(\n      atom.getConfigDirPath(), 'packages', 'agentic-ai', 'embeddings_cache'\n    );\n\n    this.ensureCacheDir();\n    this.initializeProjectTracking();\n  }",
+      "constructor() {\n    this.baseURL          = atom.config.get('agentic-ai.ollamaEndpoint') || 'http://localhost:11434';\n    this.defaultModel     = 'deepseek-coder:6.7b';\n    this.configuredModel  = atom.config.get('agentic-ai.defaultModel') || null;\n  }"
+    ]
+  ],
+  "uris": null,
+  "metadatas": [
+    [
+      {
+        "model": "nomic-embed-text:latest",
+        "source_file": "lib/context-manager.js",
+        "language": "js",
+        "startRow": 92,
+        "methodName": "projectRoot",
+        "isAsync": false,
+        "filePath": "lib/context-manager.js",
+        "type": "method",
+        "parser": "standard",
+        "text_length": 408,
+        "textLength": 408,
+        "astNodeType": "method_definition",
+        "chunk_type": "method",
+        "endColumn": 3,
+        "startColumn": 2,
+        "endRow": 101
+      },
+      {
+        "endRow": 37,
+        "methodName": "path",
+        "startRow": 21,
+        "chunk_type": "method",
+        "type": "method",
+        "isAsync": false,
+        "filePath": "lib/context-manager.js",
+        "source_file": "lib/context-manager.js",
+        "parser": "standard",
+        "startColumn": 2,
+        "language": "js",
+        "model": "nomic-embed-text:latest",
+        "textLength": 480,
+        "astNodeType": "method_definition",
+        "endColumn": 3,
+        "text_length": 480
+      },
+      {
+        "parser": "standard",
+        "textLength": 252,
+        "methodName": "atom",
+        "chunk_type": "method",
+        "astNodeType": "method_definition",
+        "isAsync": false,
+        "filePath": "lib/clients/ollama-client.js",
+        "startRow": 6,
+        "type": "method",
+        "endRow": 10,
+        "language": "js",
+        "startColumn": 2,
+        "model": "nomic-embed-text:latest",
+        "endColumn": 3,
+        "source_file": "lib/clients/ollama-client.js",
+        "text_length": 252
+      }
+    ]
+  ],
+  "distances": [
+    [
+      0.59378356,
+      0.65753245,
+      0.7099169
+    ]
+  ],
+  "include": [
+    "documents",
+    "metadatas",
+    "distances"
+  ]
+}

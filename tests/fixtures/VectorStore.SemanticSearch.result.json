@@ -1,0 +1,80 @@
+[
+  {
+      "document": "onProjectChange(projectRoot) {\n    if (this.currentProjectRoot === projectRoot && this.isIndexed) return;\n    this.currentProjectRoot = projectRoot;\n    this.lastIndexResult = null;\n    const hasCached = this.hasCachedEmbeddings();\n    this.isIndexed = hasCached;\n    console.log(hasCached\n      ? `Project has cached embeddings: ${projectRoot}`\n      : `Switched to project: ${projectRoot} (no cache)`);\n  }",
+      "metadata": {
+          "source_file": "lib/context-manager.js",
+          "astNodeType": "method_definition",
+          "parser": "standard",
+          "text_length": 408,
+          "model": "nomic-embed-text:latest",
+          "startColumn": 2,
+          "filePath": "lib/context-manager.js",
+          "startRow": 92,
+          "endRow": 101,
+          "isAsync": false,
+          "textLength": 408,
+          "chunk_type": "method",
+          "language": "js",
+          "endColumn": 3,
+          "methodName": "projectRoot",
+          "type": "method",
+          "lineStart": 93,
+          "lineEnd": 102
+      },
+      "distance": 0.59378356,
+      "score": 0.40621644,
+      "source": "semantic"
+  },
+  {
+      "document": "constructor() {\n    /** @type {Indexer|null} */\n    this.indexer = null;\n    /** @type {VectorStore|null} */\n    this.store = null;\n    /** @type {Object|null} Last IndexResult from indexer.index() */\n    this.lastIndexResult = null;\n\n    this.currentProjectRoot = '';\n    this.isIndexed = false;\n    this.cacheDir = path.join(\n      atom.getConfigDirPath(), 'packages', 'agentic-ai', 'embeddings_cache'\n    );\n\n    this.ensureCacheDir();\n    this.initializeProjectTracking();\n  }",
+      "metadata": {
+          "astNodeType": "method_definition",
+          "textLength": 480,
+          "endColumn": 3,
+          "startRow": 21,
+          "isAsync": false,
+          "chunk_type": "method",
+          "language": "js",
+          "endRow": 37,
+          "parser": "standard",
+          "filePath": "lib/context-manager.js",
+          "model": "nomic-embed-text:latest",
+          "type": "method",
+          "source_file": "lib/context-manager.js",
+          "text_length": 480,
+          "methodName": "path",
+          "startColumn": 2,
+          "lineStart": 22,
+          "lineEnd": 38
+      },
+      "distance": 0.65753245,
+      "score": 0.34246754999999995,
+      "source": "semantic"
+  },
+  {
+      "document": "constructor() {\n    this.baseURL          = atom.config.get('agentic-ai.ollamaEndpoint') || 'http://localhost:11434';\n    this.defaultModel     = 'deepseek-coder:6.7b';\n    this.configuredModel  = atom.config.get('agentic-ai.defaultModel') || null;\n  }",
+      "metadata": {
+          "chunk_type": "method",
+          "filePath": "lib/clients/ollama-client.js",
+          "parser": "standard",
+          "text_length": 252,
+          "methodName": "atom",
+          "textLength": 252,
+          "isAsync": false,
+          "type": "method",
+          "endRow": 10,
+          "astNodeType": "method_definition",
+          "model": "nomic-embed-text:latest",
+          "startColumn": 2,
+          "endColumn": 3,
+          "language": "js",
+          "source_file": "lib/clients/ollama-client.js",
+          "startRow": 6,
+          "lineStart": 7,
+          "lineEnd": 11
+      },
+      "distance": 0.7099169,
+      "score": 0.29008310000000004,
+      "source": "semantic"
+  }
+]
