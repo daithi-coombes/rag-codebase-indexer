@@ -6,7 +6,6 @@ import nock from 'nock';
 
 const baseHost = 'http://localhost:11434';
 const defaultModel = 'foobar';
-const embeddingsFixture = [[0.1, 0.2, 0.3]];
 const optionsFixture = {
   model: defaultModel,
   host: baseHost,
@@ -19,25 +18,6 @@ const optionsFixture = {
     dimensions: 768
   }
 }
-const apiTagsExpected = {
-  models: [
-    {
-      name: 'foobar:latest',
-      model: 'foobar:latest',
-      modified_at: '2026-02-11T00:12:40.790170254Z',
-      size: 274302450,
-      digest: '0a109f422b47e3a30ba2b10eca18548e944e8a23073ee3f3e947efcf3c45e59f',
-      details: {
-        parent_model: '',
-        format: 'gguf',
-        family: 'nomic-bert',
-        families: [ 'nomic-bert' ],
-        parameter_size: '137M',
-        quantization_level: 'F16'
-      }
-    }
-  ]
-};
 const mockTagsResponse = {
   models: [{ name: defaultModel }]
 };

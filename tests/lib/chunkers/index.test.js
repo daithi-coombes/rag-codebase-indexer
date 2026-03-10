@@ -1,4 +1,4 @@
-import { afterEach, beforeEach, describe, it } from 'node:test';
+import { describe, it } from 'node:test';
 import Chunker from '../../../lib/chunkers/Chunker.js';
 import assert from 'node:assert';
 import loadChunker from '../../../lib/chunkers/index.js';
@@ -13,8 +13,6 @@ describe('autoloader', () => {
   });
 
   it('will throw if no chunker found', async () => {
-    const ChunkerClass = await loadChunker(); // no argument → default 'Transformers'
-
     await assert.rejects(
       loadChunker('foobar'),
       err => {

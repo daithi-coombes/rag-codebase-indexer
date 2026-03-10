@@ -1,25 +1,36 @@
-import _ from 'lodash';
-import Logger from './Logger.js';
-
-const ENV = process.env.NODE_ENV || 'development';
-const log = new Logger();
-
 const defaultConfig = {
-  "chunker": {
-    "type": "Treesitter",
-    "chunkSize": 1500,
-    "chunkOverlap": 200
-  },
-  "embed": {
+  "indexer": {
+    "chunker": {
+      "type": "Treesitter",
+      "chunkSize": 1500,
+      "chunkOverlap": 200
+    },
     "codebase": {
       batchSize: 50,
       cacheDir: './embeddings_cache',
+      concurrency: 5,
       exclude: [ '**/node_modules/**', '**/dist/**', '**/build/**', '**/coverage/**', '**/.git/**', '**/vendor/**', '**/*.test.js', '**/*.spec.js', '**/*.d.ts'],
-      include: ['**/*.js', '**/*.js', '**/*.ts', '**/*.py', '**/*.jsx', '**/*.tsx'],
+      include: ['**/*.js', '*.cjs', '*.mjs', '**/*.go'],
       maxFileSize: 2 * 1024 * 1024,
       projectName: "rag-codebase-indexer"
     },
-    "model": {},
+    /* no defaults */
+    // model: Object,
+    // providerOptions: Object
+  },
+  "store": {
+    batchSize: 200,
+    stopWords: new Set([
+      'a', 'an', 'the', 'and', 'or', 'but', 'in', 'on', 'at', 'to', 'for',
+      'of', 'with', 'by', 'from', 'is', 'it', 'its', 'as', 'are', 'was',
+      'be', 'been', 'has', 'have', 'do', 'does', 'did', 'how', 'what',
+      'where', 'when', 'which', 'who', 'that', 'this', 'these', 'those'
+    ]),
+    weights: { exact: 0.4, semantic: 0.4, keyword: 0.2 },
+    /* no defaults */
+    // collection: string,
+    // dimensions: string,
+    // embedOptions: Object
   },
   "providers": {
     "Ollama": {
@@ -146,89 +157,32 @@ const defaultConfig = {
       }
     },
     "Transformers": {
-      "Xenova/all-MiniLM-L6-v2": {
-        "type": "embed",
-        "dimensions": 384,
-        "maxTokens": 512,
-        "quantized": true
-      },
-      "Xenova/bge-small-en-v1.5": {
-        "type": "embed",
-        "dimensions": 384,
-        "maxTokens": 512,
-        "quantized": true
-      },
-      "Xenova/all-mpnet-base-v2": {
-        "type": "embed",
-        "dimensions": 768,
-        "maxTokens": 512,
-        "quantized": false
+      models: {
+        "Xenova/all-MiniLM-L6-v2": {
+          "type": "embed",
+          "dimensions": 384,
+          "maxTokens": 512,
+          "quantized": true
+        },
+        "Xenova/bge-small-en-v1.5": {
+          "type": "embed",
+          "dimensions": 384,
+          "maxTokens": 512,
+          "quantized": true
+        },
+        "Xenova/all-mpnet-base-v2": {
+          "type": "embed",
+          "dimensions": 768,
+          "maxTokens": 512,
+          "quantized": false
+        }
       }
     }
-  }
-}
-
-/**
-* Get an embed config, adds missing defaults.
-*
-* @param  {Object} config The user provided config.
-* @return {Object}        Complete object.
-*/
-export function getEmbed(config) {
-  const { name, provider } = config.model;
-  if (!name || !provider) {
-    throw new Error(`Embed config missing 'name' or 'provider'`);
-  }
-
-  const userModelOpts     = config.model.options || {};
-  const defaultModelOpts  = defaultConfig.providers[provider].models[name];
-  config.model.options    = _.merge({}, defaultModelOpts, userModelOpts);
-
-  // TODO: tinish this, there will be more than one chunker
-  const chunker = _.merge({}, defaultConfig.embed.chunker, config.chunker);
-
-  const codebase = _.mergeWith({}, defaultConfig.embed.codebase, config.codebase, (objValue, srcValue) => {
-    return (Array.isArray(srcValue)) ? srcValue : undefined;
-  });
-
-  return {
-    codebase,
-    model: config.model,
-    chunker
   }
 }
 
 export function getProvider(provider = 'Ollama') {
   return defaultConfig[provider];
 }
-
-export const deprecatedConfig = {
-  env: ENV,
-  embed: {
-    batchSize: 16,
-    cacheDir: './embeddings_cache',
-    codebase: {
-      ignore: [ '**/node_modules/**', '**/dist/**', '**/build/**', '**/coverage/**', '**/.git/**', '**/vendor/**', '**/*.test.js', '**/*.spec.js', '**/*.d.ts'],
-      maxFileSize: 2 * 1024 * 1024, // skip files over this limit
-      patterns: ['**/*.js', '**/*.js', '**/*.ts', '**/*.py', '**/*.jsx', '**/*.tsx']
-    },
-    model: {
-      name: 'Xenova/all-MiniLM-L6-v2',
-      options: {
-        dimensions: 384,
-        pooling: 'mean',
-        normalize: true,
-        truncation: true,
-        max_length: 512
-      }
-    },
-  },
-  chunker: 'Treesitter',
-  stats: {
-    filesProcessed: 0,
-    totalChunks: 0,
-    languages: new Map()
-  }
-};
 
 export default defaultConfig;

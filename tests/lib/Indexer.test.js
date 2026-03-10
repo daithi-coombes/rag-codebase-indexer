@@ -2,7 +2,6 @@ import { afterEach, beforeEach, describe, it, mock } from 'node:test';
 import { fileURLToPath } from 'node:url';
 import Indexer from '../../lib/Indexer.js';
 import assert from 'assert/strict';
-import chunkFixtures from '../fixtures/Treesitter.buildChunk.expected.js';
 import fs from 'fs/promises';
 import mockFs from 'mock-fs';
 import path from 'node:path';
@@ -88,7 +87,7 @@ describe('Indexer', () => {
       const actual = await underTest.chunkFile('../fixtures/codebases/javascriptFixture.js', __dirname);
 
       assert.strictEqual(actual.language, 'js');
-      assert.strictEqual(actual.chunks.length, 11);
+      assert.strictEqual(actual.chunks.length, 10);
     });
 
     it('will use a bespoke chunker', async () => {
@@ -104,11 +103,11 @@ describe('Indexer', () => {
       }
 
       const underTest = await Indexer.create({
-        chunker: MockChunker,
+        chunkerClass: MockChunker,
         ...configFixture
       });
 
-      const actual = await underTest.chunkFile('../fixtures/codebases/javascriptFixture.js', __dirname);
+      await underTest.chunkFile('../fixtures/codebases/javascriptFixture.js', __dirname);
 
       assert.match(getLanguageFromPathMock.mock.calls[0].arguments[0], /fixtures\/codebases\/javascriptFixture\.js$/);
       assert.strictEqual(parseCodeFileMock.mock.calls[0].arguments[0], '../fixtures/codebases/javascriptFixture.js');
@@ -220,7 +219,7 @@ describe('Indexer', () => {
 
     it('will generate embeddings', async () => {
       const underTest = await Indexer.create({
-        embedder: MockEmbedderClass,
+        embedderClass: MockEmbedderClass,
         ...configFixture
       });
       const cb = mock.fn();
@@ -236,7 +235,7 @@ describe('Indexer', () => {
 
     it('will emit error and continue', async () => {
       const underTest = await Indexer.create({
-        embedder: MockEmbedderClassError,
+        embedderClass: MockEmbedderClassError,
         ...configFixture
       });
       underTest.emit = mock.fn();
@@ -262,7 +261,7 @@ describe('Indexer', () => {
 
         return { embeddings: res, failedIndices: [3, 7] };
       });
-      underTest.writeToCache = mock.fn((validChunks, cacheDir) => `${optionsFixture.cacheDir}/embeddings_${configFixture.projectName}.json`);
+      underTest.writeToCache = mock.fn(() => `${optionsFixture.cacheDir}/embeddings_${configFixture.projectName}.json`);
       underTest.chunkFile = mock.fn(() => ({ text: 'const foobar = "bizbaz"', chunks: ['foobar'], language: 'js'}));
     });
 
@@ -276,7 +275,8 @@ describe('Indexer', () => {
         phase: 'scan',
         status: 'start',
         current: 0,
-        total: 0
+        total: 0,
+        message: 'Starting scanner'
       }]);
       assert.deepEqual(underTest.emit.mock.calls[1].arguments, ['progress', {
         phase: 'scan',
@@ -293,7 +293,8 @@ describe('Indexer', () => {
         phase: 'chunk',
         status: 'start',
         current: 0,
-        total: 3
+        total: 3,
+        message: 'Starting chunker'
       }]);
 
       for(let i=0; i<3; i++) {
@@ -322,7 +323,8 @@ describe('Indexer', () => {
         phase: 'embed',
         status: 'start',
         current: 0,
-        total: 3
+        total: 3,
+        message: 'Starting embedder'
       }]);
 
       for(let i=0; i<3; i++) {
@@ -351,7 +353,8 @@ describe('Indexer', () => {
          phase: 'cache',
          status: 'start',
          current: 0,
-         total: 1
+         total: 1,
+         message: 'Starting caching'
        }]);
 
        assert.deepEqual(underTest.emit.mock.calls[13].arguments, ['progress', {
@@ -455,7 +458,7 @@ describe('Indexer', () => {
         getDimensions(){}
       }
       const underTest = await Indexer.create({
-        embedder: MockEmbedderClass,
+        embedderClass: MockEmbedderClass,
         ...configFixture
       });
       underTest.removeAllListeners = mock.fn();

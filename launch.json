@@ -1,0 +1,25 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "Test: --test runner",
+      "type": "node",
+      "request": "attach",
+      "port": 9229,
+      "host": "localhost",
+      "restart": false,
+      "sourceMaps": true,
+      "timeout": 30000
+    },
+    {
+      "name": "Coverage: c8 + --test runner",
+      "type": "node",
+      "request": "attach",
+      "port": 9229,
+      "host": "localhost",
+      "restart": false,
+      "sourceMaps": true,
+      "timeout": 30000
+    }
+  ]
+}

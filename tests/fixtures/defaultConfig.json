@@ -1,36 +1,29 @@
 {
-  "chunker": {
-    "type": "Treesitter",
-    "chunkSize": 1500,
-    "chunkOverlap": 200
-  },
-  "embed": {
+  "indexer": {
+    "chunker": {
+      "type": "Treesitter",
+      "chunkSize": 1500,
+      "chunkOverlap": 200
+    },
     "codebase": {
       "batchSize": 50,
       "cacheDir": "./embeddings_cache",
-      "exclude": [
-        "**/node_modules/**",
-        "**/dist/**",
-        "**/build/**",
-        "**/coverage/**",
-        "**/.git/**",
-        "**/vendor/**",
-        "**/*.test.js",
-        "**/*.spec.js",
-        "**/*.d.ts"
-      ],
-      "include": [
-        "**/*.js",
-        "**/*.js",
-        "**/*.ts",
-        "**/*.py",
-        "**/*.jsx",
-        "**/*.tsx"
-      ],
+      "concurrency": 5,
+      "exclude": [ "**/node_modules/**", "**/dist/**", "**/build/**", "**/coverage/**", "**/.git/**", "**/vendor/**", "**/*.test.js", "**/*.spec.js", "**/*.d.ts"],
+      "include": ["**/*.js", "*.cjs", "*.mjs", "**/*.go"],
       "maxFileSize": 2097152,
       "projectName": "rag-codebase-indexer"
-    },
-    "model": {}
+    }
+  },
+  "store": {
+    "batchSize": 200,
+    "stopWords": [
+      "a", "an", "the", "and", "or", "but", "in", "on", "at", "to", "for",
+      "of", "with", "by", "from", "is", "it", "its", "as", "are", "was",
+      "be", "been", "has", "have", "do", "does", "did", "how", "what",
+      "where", "when", "which", "who", "that", "this", "these", "those"
+    ],
+    "weights": { "exact": 0.4, "semantic": 0.4, "keyword": 0.2 }
   },
   "providers": {
     "Ollama": {
@@ -157,23 +150,25 @@
       }
     },
     "Transformers": {
-      "Xenova/all-MiniLM-L6-v2": {
-        "type": "embed",
-        "dimensions": 384,
-        "maxTokens": 512,
-        "quantized": true
-      },
-      "Xenova/bge-small-en-v1.5": {
-        "type": "embed",
-        "dimensions": 384,
-        "maxTokens": 512,
-        "quantized": true
-      },
-      "Xenova/all-mpnet-base-v2": {
-        "type": "embed",
-        "dimensions": 768,
-        "maxTokens": 512,
-        "quantized": false
+      "models": {
+        "Xenova/all-MiniLM-L6-v2": {
+          "type": "embed",
+          "dimensions": 384,
+          "maxTokens": 512,
+          "quantized": true
+        },
+        "Xenova/bge-small-en-v1.5": {
+          "type": "embed",
+          "dimensions": 384,
+          "maxTokens": 512,
+          "quantized": true
+        },
+        "Xenova/all-mpnet-base-v2": {
+          "type": "embed",
+          "dimensions": 768,
+          "maxTokens": 512,
+          "quantized": false
+        }
       }
     }
   }

@@ -16,15 +16,20 @@ lib/
 ├── Indexer.js                  # Public: async factory + index pipeline
 ├── VectorStore.js              # Public: ingest + hybrid search
 ├── chunkers/
-│   ├── Chunker.js              # Base class (unchanged)
-│   ├── Treesitter.js           # (unchanged)
-│   └── index.js                # Dynamic loader (unchanged)
+│   ├── Chunker.js              # Base class
+│   ├── Treesitter.js           # Default chunker
+│   └── index.js                # Dynamic loader
 ├── embedders/
-│   ├── Embedder.js             # Base class (unchanged)
-│   ├── Ollama.js               # (unchanged)
-│   ├── Transformers.js         # (unchanged)
-│   └── index.js                # Dynamic loader (unchanged)
-└── rag-codebase-indexer.js     # Barrel export
+│   ├── Embedder.js             # Base class
+│   ├── Ollama.js               # Default embedder
+│   ├── Transformers.js         # HuggingFace Transformers
+│   └── index.js                # Dynamic loader
+├── stores/
+│   ├── Chroma.js               # Default store
+│   ├── Faiss.js                # Meta's Faiss store
+│   ├── index.js                # Dynamic loader
+│   └── Store.js                # Base class
+└── index.js     # Barrel export
 ```
 
 **What changes:**
@@ -41,7 +46,7 @@ lib/
 export { Indexer } from './Indexer.js';
 export { VectorStore } from './VectorStore.js';
 export { default as config } from '../config/index.js';
-export const VERSION = '0.1.0';
+export const VERSION = '0.0.1';
 ```
 
 ---

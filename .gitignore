@@ -2,6 +2,7 @@
 *.log
 coverage/
 node_modules/
-embeddings_treesitter_cache/
+embeddings_cache/
 dist/
 .DS_Store
+.vscode

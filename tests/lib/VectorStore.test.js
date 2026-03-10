@@ -2,47 +2,74 @@ import { afterEach, beforeEach, describe, it, mock } from 'node:test';
 import VectorStore from '../../lib/VectorStore.js';
 import _ from 'lodash';
 import assert from 'node:assert';
+import config from '../../config/index.js';
 import mockFs from 'mock-fs';
 
 import ChromaGet200 from '../fixtures/Chroma.get.200.json' with { type: 'json' };
 import ChromaQuery200 from '../fixtures/Chroma.query.200.json' with { type: 'json' };
-import SemanticResultsFixture from '../fixtures/VectorStore.SemanticSearch.result.json' with { type: 'json' };
-import KeywordResultsFixture from '../fixtures/VectorStore.KeywordSearch.result.json' with { type: 'json' };
 
 describe('VectorStore', () => {
   let underTest;
+  let MockStore;
 
-  const mockCollectionGetResult = ChromaGet200;
-  const mockCollectionQueryResult = ChromaQuery200;
-  const mockVectorClientConstructor = mock.fn();
-  const mockVectorCollection = {
-    add: mock.fn(),
-    get: mock.fn(() => mockCollectionGetResult),
-    query: mock.fn(() => mockCollectionQueryResult)
-  };
-  class MockVectorClient{
+  const mockStoreConstructor = mock.fn();
+  const mockGetAll = mock.fn(() => ChromaGet200);
+  const mockInitialize = mock.fn();
+  const mockQuery = mock.fn(() => ChromaQuery200);
+  const mockInsert = mock.fn();
+  class MockStoreClass{
     constructor() {
-      mockVectorClientConstructor(...arguments);
+      // mockVectorClientConstructor(...arguments);
+      mockStoreConstructor(...arguments);
     }
-
-    getCollection = mock.fn(() => mockVectorCollection);
-    createCollection = mock.fn();
+    getAll() {
+      return mockGetAll(...arguments);
+    }
+    initialize() {
+      mockInitialize(...arguments);
+    }
+    insert() {
+      mockInsert(...arguments);
+    }
+    query() {
+      return mockQuery(...arguments);
+    }
   }
+  const mockEmbed = mock.fn(() => [0.1, 0.2, 0.3, 0.4]);
+  const mockEmbedderInitialize = mock.fn();
+  const mockEmbedderGetDimensions = mock.fn(() => 786);
+  class MockEmbedderClass {
+    embed = mockEmbed;
+    initialize = mockEmbedderInitialize;
+    getDimensions = mockEmbedderGetDimensions;
+  }
+
   const configFixture = {
     collection: 'test-collection',
     dimensions: 786,
     embedOptions: {
       provider: 'Ollama'
-    }
+    },
+    ...config.store
   };
 
   beforeEach(async () => {
-    underTest = await VectorStore.connect(configFixture, MockVectorClient);
+    MockStore = MockStoreClass;
+    underTest = await VectorStore.connect(configFixture, MockStore);
+    await underTest.loadEmbedder({}, MockEmbedderClass);
     underTest.emit = mock.fn();
   });
 
   afterEach(async () => {
     await underTest.dispose();
+    mockStoreConstructor.mock.resetCalls();
+    mockGetAll.mock.resetCalls();
+    mockInitialize.mock.resetCalls();
+    mockInsert.mock.resetCalls();
+    mockQuery.mock.resetCalls();
+    mockEmbed.mock.resetCalls();
+    mockEmbedderInitialize.mock.resetCalls();
+    mockEmbedderGetDimensions.mock.resetCalls();
     mock.restoreAll();
     mockFs.restore();
   });
@@ -52,22 +79,23 @@ describe('VectorStore', () => {
       assert.strictEqual(underTest.constructor.name, 'VectorStore');
     });
 
-    it('will create a collection if none', async () => {
-      const mockCreateCollection = mock.fn();
-      class MockVectorClientNoCollection extends MockVectorClient {
-        getCollection = () => {
-          const err = new Error('ChromaNotFoundError');
-          err.name = 'ChromaNotFoundError'
-          throw err;
-        }
-        createCollection = (args) => {
-          mockCreateCollection(args);
-        }
-      }
+    it('will initialize store', async () => {
+      // const mockCreateCollection = mock.fn();
+      // class MockStoreNoCollection extends MockStore {
+      //   getCollection = () => {
+      //     const err = new Error('ChromaNotFoundError');
+      //     err.name = 'ChromaNotFoundError'
+      //     throw err;
+      //   }
+      //   createCollection = (args) => {
+      //     mockCreateCollection(args);
+      //   }
+      // }
 
-      const underTest = await VectorStore.connect(configFixture, MockVectorClientNoCollection);
+      // const underTest = await VectorStore.connect(configFixture, MockStoreNoCollection);
 
-      assert.deepEqual(mockCreateCollection.mock.calls[0].arguments[0], {name: 'test-collection', dimensions: configFixture.dimensions});
+      // assert.deepEqual(mockCreateCollection.mock.calls[0].arguments[0], {name: 'test-collection', dimensions: configFixture.dimensions});
+      assert.strictEqual(mockInitialize.mock.calls.length, 1);
     });
 
     it('will throw if no collection name', async () => {
@@ -92,21 +120,6 @@ describe('VectorStore', () => {
       );
     });
 
-    it('will throw if chroma error is not ChromaNotFoundError', async () => {
-
-      const mockGetCollection = mock.fn(() => { throw new Error('foobar') });
-      class MockVectorDB extends MockVectorClient {
-        getCollection = mockGetCollection;
-      }
-
-      await assert.rejects(
-        () => VectorStore.connect(configFixture, MockVectorDB),
-        err => {
-          assert.strictEqual(err.message, 'foobar');
-          return true;
-        }
-      );
-    });
   });
 
   describe('ingest()', () => {
@@ -121,7 +134,7 @@ describe('VectorStore', () => {
       const actual = await underTest.ingest({
         embedFile: '/workspace/foo/bar/embeddings_mock.json',
         dimensions: 786
-      });
+      }, MockEmbedderClass);
 
       assert.deepEqual(underTest.emit.mock.calls[0].arguments[0], 'start');
       assert.deepEqual(underTest.emit.mock.calls[1].arguments[0], 'progress');
@@ -147,23 +160,20 @@ describe('VectorStore', () => {
     });
 
     it('will retry with smaller batch', async () => {
-      const addCount = 0 ;
-      const mockVectorCollectionThrow = {
-        add() {
+      class MockStoreThrow extends MockStore {
+        insert() {
           throw new Error('foobar');
         }
-      };
-      class MockVectorClientThrow extends MockVectorClient {
-        getCollection = mock.fn(() => mockVectorCollectionThrow);
       }
 
-      const underTest = await VectorStore.connect(configFixture, MockVectorClientThrow);
+      const underTest = await VectorStore.connect(configFixture, MockStoreThrow);
+      await underTest.loadEmbedder({}, MockEmbedderClass);
       underTest.emit = mock.fn();
 
-      const actual = await underTest.ingest({
+      await underTest.ingest({
         embedFile: '/workspace/foo/bar/embeddings_mock.json',
         dimensions: 786
-      });
+      }, MockEmbedderClass);
 
       assert.deepEqual(underTest.emit.mock.calls[1].arguments, ['error', {
         phase: 'ingest',
@@ -180,7 +190,7 @@ describe('VectorStore', () => {
     });
   });
 
-  describe('loadEmbedder', () => {
+  describe('loadEmbedder()', () => {
     it('will load bespoke class', async () => {
       const mockInitialize = mock.fn();
       const mockDimensions = mock.fn(() => 368);
@@ -196,7 +206,7 @@ describe('VectorStore', () => {
     });
   });
 
-  describe('loadEmbeddings', () => {
+  describe('loadEmbeddings()', () => {
     beforeEach(() => {
       mockFs({
         '/workspace/foo/bar/embeddings_mock.json': '{"chunks":[{"id":"Y29uZmlnL2luZGV4Lmpz:0:1772396639617","text":"staticConfig = require(\'./agentic-ai.json\')","metadata":{"filePath":"config/index.js","language":"js","type":"variable","astNodeType":"variable_declarator","startRow":2,"startColumn":6,"endRow":2,"endColumn":49,"textLength":43,"variableName":"staticConfig"},"embedding":[-0.025579184,0.024237446,-0.12540329,-0.02682167],"file":"config/index.js","language":"js"},{"id":"Y29uZmlnL2luZGV4Lmpz:2:1772396639617","text":"static get(keyPath) {    return atom.config.get(`${this.NAMESPACE}.${keyPath}`);  }","metadata":{"filePath":"config/index.js","language":"js","type":"method","astNodeType":"method_definition","startRow":25,"startColumn":2,"endRow":27,"endColumn":3,"textLength":85,"methodName":"keyPath","isAsync":false},"embedding":[0.011845425,0.03150496,-0.129117,-0.048051752],"file":"config/index.js","language":"js"},{"id":"Y29uZmlnL2luZGV4Lmpz:3:1772396639618","text":"static set(keyPath, value) {    return atom.config.set(`${this.NAMESPACE}.${keyPath}`, value);  }","metadata":{"filePath":"config/index.js","language":"js","type":"method","astNodeType":"method_definition","startRow":29,"startColumn":2,"endRow":31,"endColumn":3,"textLength":99,"methodName":"keyPath","isAsync":false},"embedding":[0.011002577,0.041806478,-0.14281082,-0.072861485],"file":"config/index.js","language":"js"}],"model":"nomic-embed-text:latest","dimensions":768,"total":182,"timestamp":"2026-03-01T20:26:46.938Z"}'
@@ -263,7 +273,7 @@ describe('VectorStore', () => {
 
   describe('search()', () => {
     it('will search', async () => {
-      const actual = await underTest.search('foobar');
+      await underTest.search('foobar');
 
       assert.deepEqual(underTest.emit.mock.calls[0].arguments, ['progress', {
         phase: 'search',
@@ -279,37 +289,6 @@ describe('VectorStore', () => {
         status: 'progress',
         total: 3
       }]);
-      assert.deepEqual(underTest.emit.mock.calls[2].arguments, ['progress', {
-        current: 3,
-        message: 'Found 3 results from 2 files',
-        phase: 'search',
-        status: 'complete',
-        total: 3
-      }]);
-    });
-
-    it('will emit error and continue', async () => {
-      const mockIdentifierResult = _.cloneDeep(ChromaGet200);
-      delete mockIdentifierResult.metadatas
-
-      const mockIdentifierCollection = _.cloneDeep(mockVectorCollection);
-      mockIdentifierCollection.get = mock.fn(() => mockIdentifierResult);
-      class MockVectorIdentifierClient extends MockVectorClient {
-        getCollection = mock.fn(() => mockIdentifierCollection);
-      }
-
-      const underTest = await VectorStore.connect(configFixture, MockVectorIdentifierClient)
-      underTest.emit = mock.fn();
-      const actual = await underTest.search('foobar');
-
-      assert.strictEqual(underTest.emit.mock.calls[1].arguments[0], 'error');
-      assert.strictEqual(underTest.emit.mock.calls[1].arguments[1].phase, 'search:exact');
-      assert.strictEqual(underTest.emit.mock.calls[1].arguments[1].message, 'Exact match search failed: Cannot read properties of undefined (reading \'0\')');
-      assert.strictEqual(underTest.emit.mock.calls[1].arguments[1].error.message, 'Cannot read properties of undefined (reading \'0\')');
-      assert.strictEqual(underTest.emit.mock.calls[2].arguments[0], 'error');
-      assert.strictEqual(underTest.emit.mock.calls[2].arguments[1].phase, 'search:keyword');
-      assert.strictEqual(underTest.emit.mock.calls[2].arguments[1].message, 'Keyword search failed: Cannot read properties of undefined (reading \'0\')');
-      assert.strictEqual(underTest.emit.mock.calls[2].arguments[1].error.message, 'Cannot read properties of undefined (reading \'0\')');
     });
 
     it('search excludes results when numeric filter does not match (matchesFilters false)', async () => {
@@ -364,21 +343,46 @@ describe('VectorStore', () => {
 
       assert.strictEqual(actual[0].score, 0.75);
     });
+
+    it('will emit an error and return empty array', async () => {
+      const actual = await underTest.findExactMatches('foobar', () => { throw new Error('foobar') });
+
+      assert.strictEqual(underTest.emit.mock.calls[0].arguments[0], 'error');
+      assert.strictEqual(underTest.emit.mock.calls[0].arguments[1].phase, 'search:exact');
+      assert.strictEqual(underTest.emit.mock.calls[0].arguments[1].message, 'Exact match search failed: foobar');
+      assert.deepEqual(actual, []);
+    });
   });
 
   describe('semanticSearch()', () => {
     it('will return an empty array if no results', async () => {
-      const mockSemanticSearchCollection = {
-        query: mock.fn(() => ({ documents: [] }))
-      };
-      class MockSemanticSearchClient extends MockVectorClient{
-        getCollection = mock.fn(() => mockSemanticSearchCollection);
+      class MockSemanticSearchStore extends MockStore{
+        query = mock.fn(() => ({ documents: [] }));
       }
 
-      const underTest = await VectorStore.connect(configFixture, MockSemanticSearchClient);
+      const underTest = await VectorStore.connect(configFixture, MockSemanticSearchStore);
+      await underTest.loadEmbedder({}, MockEmbedderClass);
       const actual = await underTest.semanticSearch('foobar');
 
       assert.deepEqual(actual, []);
+    });
+
+    it('will emit error and return empty array on failure', async () => {
+      class MockSemanticSearchStore extends MockStore {
+        query = mock.fn(() => {throw new Error('query exploded')});
+      }
+
+      const underTest = await VectorStore.connect(configFixture, MockSemanticSearchStore);
+      await underTest.loadEmbedder({}, MockEmbedderClass);
+      underTest.emit = mock.fn();
+
+      const actual = await underTest.semanticSearch('foobar');
+
+      assert.deepEqual(actual, []);
+      assert.strictEqual(underTest.emit.mock.calls[0].arguments[0], 'error');
+      assert.strictEqual(underTest.emit.mock.calls[0].arguments[1].phase, 'search:semantic');
+      assert.strictEqual(underTest.emit.mock.calls[0].arguments[1].message, 'Semantic search failed: query exploded');
+      assert.strictEqual(underTest.emit.mock.calls[0].arguments[1].recoverable, true);
     });
   });
 
@@ -388,48 +392,15 @@ describe('VectorStore', () => {
 
       assert.deepEqual(actual, []);
     });
-  });
 
-  describe('cleanFilters()', () => {
-    it('will clean filters', async () => {
-      const mockCleanFiltersCollection = _.cloneDeep(mockVectorCollection);
-      mockCleanFiltersCollection.query = mock.fn();
-      class MockCleanFiltersClient extends MockVectorClient {
-        getCollection = mock.fn(() => mockCleanFiltersCollection);
-      }
+    it('will emit error and return empty array', async () => {
+      const actual = await underTest.keywordSearch('foobar', () => { throw new Error('foobar') });
 
-      const underTest = await VectorStore.connect(configFixture, MockCleanFiltersClient)
-
-      await assert.rejects(
-        () => underTest.search('foobar', { filters: { filePath: 'src/auth/' } }),
-        err => {
-          assert.deepEqual(mockCleanFiltersCollection.query.mock.calls[0].arguments[0].where, { filePath: { '$eq': 'src/auth/' } });
-          return true;
-        }
-      );
-
+      assert.strictEqual(underTest.emit.mock.calls[0].arguments[0], 'error');
+      assert.strictEqual(underTest.emit.mock.calls[0].arguments[1].phase, 'search:keyword');
+      assert.strictEqual(underTest.emit.mock.calls[0].arguments[1].message, 'Keyword search failed: foobar');
+      assert.deepEqual(actual, []);
     });
-
-    it('will clean operator filters', async () => {
-      const mockCleanFiltersCollection = _.cloneDeep(mockVectorCollection);
-      mockCleanFiltersCollection.query = mock.fn();
-      class MockCleanFiltersClient extends MockVectorClient {
-        getCollection = mock.fn(() => mockCleanFiltersCollection);
-      }
-
-      const underTest = await VectorStore.connect(configFixture, MockCleanFiltersClient)
-
-      await assert.rejects(
-        () => underTest.search('foobar', { filters: { filePath: { $contains: 'bizbaz' } } }),
-        err => {
-          assert.deepEqual(mockCleanFiltersCollection.query.mock.calls[0].arguments[0].where, { filePath: { $contains: 'bizbaz' } });
-          return true;
-        }
-      );
-    });
-  });
-
-  describe('fuseResults()', () => {
   });
 
   describe('getRanked()', () => {
@@ -679,26 +650,6 @@ describe('VectorStore', () => {
       assert.equal(entry.bestRawScore, 1.0);
       assert.equal(entry.distance, 0.0);
       assert.deepEqual(entry.sources, new Set(['exact', 'semantic', 'keyword']));
-    });
-  });
-
-  describe('cleanFilters', () => {
-    it('will skip null/undefined values and passes through operator objects unchanged', () => {
-      const filters = {
-        gone:      undefined,
-        alsoGone:  null,
-        withOp:    { $gte: 10 },
-        withoutOp: { foo: 'bar' },
-      };
-
-      const cleaned = VectorStore.cleanFilters(filters);
-
-      assert.equal(cleaned.gone, undefined, 'undefined values should be skipped');
-      assert.equal(cleaned.alsoGone, undefined, 'null values should be skipped');
-      assert.deepStrictEqual(cleaned.withOp, { $gte: 10 },
-        'objects with a recognised operator should pass through unchanged');
-      assert.deepStrictEqual(cleaned.withoutOp, { $eq: { foo: 'bar' } },
-        'objects without a recognised operator should be wrapped in $eq');
     });
   });
 

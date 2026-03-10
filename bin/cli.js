@@ -14,7 +14,7 @@
  *   analyze <file>     Analyze chunk sizes in an embeddings file
  */
 
-import { Indexer, VectorStore, config } from '../lib/rag-codebase-indexer.js';
+import { Indexer, VectorStore, config } from '../index.js';
 import Logger from '../config/Logger.js';
 import fs from 'fs/promises';
 import path from 'node:path';
@@ -174,7 +174,7 @@ async function handleEmbed(commandArgs) {
     await indexer.index({
       projectPath: path.resolve(codebasePath),
       cacheDir,
-      include: config.embed?.codebase?.include || ['**/*.js', '**/*.mjs', '**/*.ts', '**/*.py', '**/*.jsx', '**/*.tsx'],
+      include: config.embed?.codebase?.include || config.include,
       exclude: config.embed?.codebase?.exclude || ['**/node_modules/**', '**/dist/**', '**/coverage/**', '**/.git/**', '**/build/**'],
       maxFileSize: 2 * 1024 * 1024,
     });
@@ -529,11 +529,11 @@ async function main() {
   const commandArgs = parseArgs(args);
 
   switch (commandArgs.command) {
-    case 'embed':
+    case 'index':
       await handleEmbed(commandArgs);
       break;
 
-    case 'load':
+    case 'ingest':
       await handleLoad(commandArgs);
       break;
 
