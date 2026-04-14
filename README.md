@@ -34,7 +34,7 @@ Two primary exports drive this: **`Indexer`** handles stages 1.1–1.2, **`Vecto
 ## Installation
 
 ```bash
-npm install
+npm install rag-codebase-indexer
 ```
 
 ## Module Usage

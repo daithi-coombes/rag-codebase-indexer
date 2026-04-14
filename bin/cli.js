@@ -30,7 +30,7 @@ function printHelp() {
   Pipeline Composition API — scan → chunk → embed → ingest → search
 
   Commands:
-    embed <path>       - Chunk & embed a codebase (writes cache file)
+    index <path>       - Chunk & index a codebase (writes cache file)
     load <file>        - Ingest cached embeddings into ChromaDB
     search <query>     - Hybrid search (exact + semantic + keyword)
     analyze <file>     - Analyze chunk sizes in an embeddings file
@@ -42,7 +42,7 @@ function printHelp() {
     --cache-dir <dir>   Directory for embedding cache (default: ./embeddings_cache)
     --project <name>    Project name for cache file naming
 
-  Load Options:
+  Ingest Options:
     --collection <name> Collection name (required)
     --url <url>         ChromaDB URL (default: http://localhost:8000)
     --batch-size <n>    Insert batch size (default: 200)
@@ -60,9 +60,9 @@ function printHelp() {
     --interactive       Start interactive search mode
 
   Examples:
-    node cli.js embed ./src
-    node cli.js embed ./src --provider Ollama --model nomic-embed-text
-    node cli.js load ./embeddings_cache/embeddings_myproject.json --collection my-project
+    node cli.js index ./src
+    node cli.js index ./src --provider Ollama --model nomic-embed-text
+    node cli.js ingest ./embeddings_cache/embeddings_myproject.json --collection my-project
     node cli.js search "authentication middleware" --collection my-project
     node cli.js search --interactive --collection my-project
     node cli.js analyze ./embeddings_cache/embeddings_myproject.json
